@@ -1,0 +1,2467 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CodePilotOps 企业级 AI PR 风险分析平台</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --surface-blue: #f1f6ff;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --text: #111827;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --success-soft: #ecfdf5;
+      --warning: #d97706;
+      --warning-soft: #fffbeb;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --purple: #7c3aed;
+      --purple-soft: #f5f3ff;
+      --cyan: #0891b2;
+      --cyan-soft: #ecfeff;
+      --code: #0f172a;
+      --sidebar: #101827;
+      --sidebar-soft: #1d2939;
+      --shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      font-family: "Microsoft YaHei", "PingFang SC", Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: var(--sidebar);
+      color: #f8fafc;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 11px;
+      align-items: center;
+      padding: 0 8px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 760;
+    }
+
+    .brand-subtitle {
+      margin-top: 1px;
+      color: #a8b3c7;
+      font-size: 12px;
+    }
+
+    .nav-section-title {
+      padding: 8px 10px 4px;
+      color: #8b9bb4;
+      font-size: 12px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 3px;
+    }
+
+    .nav button {
+      width: 100%;
+      height: 40px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 10px;
+      background: transparent;
+      color: #d8dee9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      background: var(--sidebar-soft);
+      color: #fff;
+    }
+
+    .nav-icon {
+      width: 18px;
+      color: #9aa8bd;
+      text-align: center;
+    }
+
+    .sidebar-card {
+      margin-top: auto;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.045);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .sidebar-card strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-card span {
+      display: block;
+      color: #a8b3c7;
+      font-size: 12px;
+    }
+
+    .main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 64px minmax(0, 1fr);
+    }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 28px;
+    }
+
+    .search {
+      width: 400px;
+      max-width: 44vw;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 12px;
+      background: var(--surface-soft);
+      color: var(--text);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .health-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .content {
+      padding: 28px;
+      overflow: auto;
+    }
+
+    .view {
+      display: none;
+      max-width: 1440px;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 30px;
+      letter-spacing: 0;
+    }
+
+    .page-desc {
+      margin: 4px 0 0;
+      color: var(--muted);
+    }
+
+    .button-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      height: 36px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 0 12px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn.danger {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      margin-bottom: 16px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-header {
+      min-height: 62px;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 750;
+    }
+
+    .panel-subtitle {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    .metric {
+      padding: 16px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .metric-value {
+      margin-top: 5px;
+      font-size: 27px;
+      line-height: 35px;
+      font-weight: 780;
+    }
+
+    .metric-note {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric.ai {
+      background: linear-gradient(180deg, #fff 0%, var(--surface-blue) 100%);
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.32fr) minmax(360px, 0.68fr);
+      gap: 16px;
+    }
+
+    .three {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .analysis-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.68fr) minmax(380px, 0.32fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    th {
+      color: var(--muted);
+      background: var(--surface-soft);
+      font-weight: 700;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .mono {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tag.low,
+    .tag.success {
+      color: var(--success);
+      background: var(--success-soft);
+    }
+
+    .tag.medium,
+    .tag.warning {
+      color: var(--warning);
+      background: var(--warning-soft);
+    }
+
+    .tag.high,
+    .tag.danger {
+      color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .tag.blue {
+      color: var(--primary);
+      background: var(--surface-blue);
+    }
+
+    .tag.purple {
+      color: var(--purple);
+      background: var(--purple-soft);
+    }
+
+    .tag.cyan {
+      color: var(--cyan);
+      background: var(--cyan-soft);
+    }
+
+    .tag.neutral {
+      color: #475569;
+      background: #f1f5f9;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .form-field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .form-field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: #334155;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    input,
+    select,
+    textarea {
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 0 11px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    input,
+    select {
+      height: 38px;
+    }
+
+    textarea {
+      min-height: 96px;
+      padding-top: 10px;
+      resize: vertical;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .checkbox-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: #334155;
+    }
+
+    .checkbox-row input {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .tab {
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      padding: 13px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 750;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .risk-card {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 170px minmax(0, 1fr);
+      gap: 22px;
+      align-items: center;
+    }
+
+    .gauge {
+      width: 148px;
+      height: 148px;
+      border-radius: 50%;
+      background: conic-gradient(var(--warning) 0deg 245deg, #edf2f7 245deg 360deg);
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .gauge::after {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      background: var(--surface);
+    }
+
+    .gauge-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .gauge-score {
+      font-size: 32px;
+      line-height: 36px;
+      font-weight: 820;
+    }
+
+    .gauge-label {
+      color: var(--warning);
+      font-size: 12px;
+      font-weight: 780;
+    }
+
+    .summary-list {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .summary-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px;
+      background: var(--surface-soft);
+    }
+
+    .summary-item strong {
+      display: block;
+      font-size: 18px;
+      line-height: 24px;
+    }
+
+    .summary-item span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .review-section {
+      display: grid;
+      gap: 16px;
+    }
+
+    .review-block h3 {
+      margin: 0 0 7px;
+      font-size: 14px;
+    }
+
+    .review-block p,
+    .review-block ul {
+      margin: 0;
+      color: #334155;
+    }
+
+    .review-block ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .json {
+      margin: 0;
+      border-radius: 8px;
+      padding: 16px;
+      overflow: auto;
+      background: var(--code);
+      color: #d1d5db;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    .timeline-dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .timeline-title {
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .timeline-meta {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .filter-row input {
+      min-width: 300px;
+    }
+
+    .bar-chart {
+      height: 220px;
+      display: flex;
+      align-items: end;
+      gap: 18px;
+      padding: 10px 4px 0;
+    }
+
+    .bar-wrap {
+      flex: 1;
+      display: grid;
+      gap: 8px;
+      align-items: end;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .bar {
+      min-height: 20px;
+      border-radius: 6px 6px 0 0;
+    }
+
+    .bar.low {
+      height: 76px;
+      background: var(--success);
+    }
+
+    .bar.medium {
+      height: 138px;
+      background: var(--warning);
+    }
+
+    .bar.high {
+      height: 52px;
+      background: var(--danger);
+    }
+
+    .bar.ai {
+      height: 112px;
+      background: var(--primary);
+    }
+
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .capability {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--surface);
+    }
+
+    .capability-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 760;
+      margin-bottom: 7px;
+    }
+
+    .capability p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .policy-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--surface-soft);
+      display: grid;
+      gap: 8px;
+    }
+
+    .policy-card strong {
+      font-size: 14px;
+    }
+
+    .policy-meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .model-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      background: var(--surface);
+    }
+
+    .model-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .model-name {
+      font-weight: 780;
+    }
+
+    .kv-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .kv {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--surface-soft);
+    }
+
+    .kv span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .kv strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 15px;
+    }
+
+    .code-workbench {
+      display: grid;
+      grid-template-columns: minmax(0, 0.58fr) minmax(420px, 0.42fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .code-editor {
+      min-height: 360px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 14px;
+      background: #0f172a;
+      color: #dbeafe;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
+    }
+
+    .result-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr) 48px;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .score-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .score-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: var(--primary);
+    }
+
+    .score-fill.warning {
+      background: var(--warning);
+    }
+
+    .score-fill.danger {
+      background: var(--danger);
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .template-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 15px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .template-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .template-title {
+      font-weight: 780;
+      font-size: 15px;
+    }
+
+    .template-desc {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .criteria-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .criteria-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toolbox-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .toolbox-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 15px;
+      min-height: 168px;
+      display: grid;
+      align-content: start;
+      gap: 9px;
+    }
+
+    .toolbox-card h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .toolbox-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1120px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+
+      .topbar {
+        padding: 14px 16px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search {
+        width: 100%;
+        max-width: none;
+      }
+
+      .content {
+        padding: 18px;
+      }
+
+      .metrics,
+      .split,
+      .three,
+      .analysis-layout,
+      .form-grid,
+      .risk-card,
+      .summary-list,
+      .capability-grid,
+      .kv-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .code-workbench,
+      .template-grid,
+      .toolbox-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-heading {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">CP</div>
+        <div>
+          <div class="brand-title">CodePilotOps</div>
+          <div class="brand-subtitle">企业级 AI 交付风险平台</div>
+        </div>
+      </div>
+
+      <div class="nav-section-title">工作台</div>
+      <nav class="nav" aria-label="主导航">
+        <button class="active" data-view="dashboard"><span class="nav-icon">◇</span>总览看板</button>
+        <button data-view="repositories"><span class="nav-icon">⌁</span>仓库接入</button>
+        <button data-view="new-analysis"><span class="nav-icon">＋</span>新建分析</button>
+        <button data-view="code-analysis"><span class="nav-icon">⌘</span>代码片段分析</button>
+        <button data-view="detail"><span class="nav-icon">◎</span>分析详情</button>
+        <button data-view="history"><span class="nav-icon">≡</span>分析历史</button>
+      </nav>
+
+      <div class="nav-section-title">AI 治理</div>
+      <nav class="nav" aria-label="AI 治理导航">
+        <button data-view="ai-center"><span class="nav-icon">AI</span>AI 能力中心</button>
+        <button data-view="templates"><span class="nav-icon">▤</span>评判标准模板</button>
+        <button data-view="rules"><span class="nav-icon">□</span>规则与策略</button>
+        <button data-view="devops-toolbox"><span class="nav-icon">⬡</span>AI DevOps 工具箱</button>
+        <button data-view="models"><span class="nav-icon">◌</span>模型监控</button>
+        <button data-view="audit"><span class="nav-icon">▣</span>审计日志</button>
+        <button data-view="settings"><span class="nav-icon">⚙</span>系统配置</button>
+      </nav>
+
+      <div class="sidebar-card">
+        <strong>本地企业演示模式</strong>
+        <span>当前使用 Mock Reviewer，可切换 Ollama 或 OpenAI-Compatible Provider。</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <input class="search" placeholder="搜索仓库、PR、规则、策略或模型调用记录" />
+        <div class="top-actions">
+          <span class="health-dot"></span>
+          <span>AI 服务正常</span>
+          <span>·</span>
+          <span>当前租户：研发效能部</span>
+          <span>·</span>
+          <span>Provider：Mock Reviewer</span>
+        </div>
+      </header>
+
+      <section class="content">
+        <div id="dashboard" class="view active">
+          <div class="page-heading">
+            <div>
+              <h1>总览看板</h1>
+              <p class="page-desc">统一查看 PR 风险、AI 审核质量、模型调用成本和团队交付健康度。</p>
+            </div>
+            <div class="button-row">
+              <button class="btn">刷新数据</button>
+              <button class="btn primary" data-jump="new-analysis">新建 PR 分析</button>
+            </div>
+          </div>
+
+          <div class="grid metrics">
+            <div class="panel metric ai">
+              <div class="metric-label">本月 AI 审核次数</div>
+              <div class="metric-value">1,286</div>
+              <div class="metric-note">较上月提升 18.4%</div>
+            </div>
+            <div class="panel metric">
+              <div class="metric-label">高风险 PR</div>
+              <div class="metric-value">17</div>
+              <div class="metric-note">其中 5 个阻断合并</div>
+            </div>
+            <div class="panel metric">
+              <div class="metric-label">平均风险分</div>
+              <div class="metric-value">54</div>
+              <div class="metric-note">处于中等交付风险</div>
+            </div>
+            <div class="panel metric">
+              <div class="metric-label">模型调用成本</div>
+              <div class="metric-value">$42.8</div>
+              <div class="metric-note">本月预算使用 36%</div>
+            </div>
+            <div class="panel metric ai">
+              <div class="metric-label">代码片段分析</div>
+              <div class="metric-value">312</div>
+              <div class="metric-note">模板命中率 82%</div>
+            </div>
+          </div>
+
+          <div class="split">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">近期 PR 风险分析</h2>
+                  <div class="panel-subtitle">按最近完成时间排序，展示风险等级、AI 结论和策略命中情况。</div>
+                </div>
+                <button class="btn" data-jump="history">查看全部</button>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>仓库</th>
+                    <th>PR</th>
+                    <th>风险</th>
+                    <th>AI 结论</th>
+                    <th>策略命中</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">spring-projects/spring-petclinic</td>
+                    <td>#123</td>
+                    <td><span class="tag medium">中风险</span></td>
+                    <td>需补充接口测试与健康检查</td>
+                    <td>5</td>
+                    <td><span class="tag success">已完成</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">acme/api-gateway</td>
+                    <td>#42</td>
+                    <td><span class="tag high">高风险</span></td>
+                    <td>建议阻断合并，存在配置泄露风险</td>
+                    <td>9</td>
+                    <td><span class="tag success">已完成</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">demo/order-service</td>
+                    <td>#18</td>
+                    <td><span class="tag low">低风险</span></td>
+                    <td>变更范围可控，建议常规回归</td>
+                    <td>1</td>
+                    <td><span class="tag neutral">分析中</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">企业级 AI 指标</h2>
+                  <div class="panel-subtitle">风险分布与模型工作负载概览。</div>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="bar-chart" aria-label="企业级 AI 指标柱状图">
+                  <div class="bar-wrap"><div class="bar low"></div><span>低风险</span></div>
+                  <div class="bar-wrap"><div class="bar medium"></div><span>中风险</span></div>
+                  <div class="bar-wrap"><div class="bar high"></div><span>高风险</span></div>
+                  <div class="bar-wrap"><div class="bar ai"></div><span>AI 调用</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="three" style="margin-top: 16px;">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">AI 审核质量</h2>
+                  <div class="panel-subtitle">结构化输出成功率与人工采纳情况。</div>
+                </div>
+              </div>
+              <div class="panel-body kv-grid">
+                <div class="kv"><span>JSON 解析成功率</span><strong>98.7%</strong></div>
+                <div class="kv"><span>建议采纳率</span><strong>71.2%</strong></div>
+                <div class="kv"><span>人工驳回率</span><strong>4.8%</strong></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">策略治理</h2>
+                  <div class="panel-subtitle">高危规则与组织策略执行情况。</div>
+                </div>
+              </div>
+              <div class="panel-body kv-grid">
+                <div class="kv"><span>启用规则</span><strong>29</strong></div>
+                <div class="kv"><span>阻断策略</span><strong>6</strong></div>
+                <div class="kv"><span>待审批变更</span><strong>3</strong></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">知识库上下文</h2>
+                  <div class="panel-subtitle">AI Review 使用的团队工程规范。</div>
+                </div>
+              </div>
+              <div class="panel-body kv-grid">
+                <div class="kv"><span>文档数</span><strong>42</strong></div>
+                <div class="kv"><span>命中率</span><strong>63%</strong></div>
+                <div class="kv"><span>最近同步</span><strong>今天</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="repositories" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>仓库接入</h1>
+              <p class="page-desc">配置 GitHub / GitLab 仓库、分支规则、Webhook 自动扫描和合并前门禁策略。</p>
+            </div>
+            <div class="button-row">
+              <button class="btn">测试 Webhook</button>
+              <button class="btn">同步分支</button>
+              <button class="btn primary">接入新仓库</button>
+            </div>
+          </div>
+
+          <div class="analysis-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">仓库配置</h2>
+                  <div class="panel-subtitle">支持手动扫描和 Webhook 自动触发，后续可扩展 GitHub App / GitLab App。</div>
+                </div>
+                <span class="tag success">已启用自动扫描</span>
+              </div>
+              <div class="panel-body form-grid">
+                <div class="form-field">
+                  <label>代码平台</label>
+                  <select>
+                    <option>GitHub</option>
+                    <option>GitLab</option>
+                    <option>Gitea / 自托管 Git</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>接入方式</label>
+                  <select>
+                    <option>Webhook + Token</option>
+                    <option>GitHub App</option>
+                    <option>GitLab Project Access Token</option>
+                    <option>仅手动扫描</option>
+                  </select>
+                </div>
+                <div class="form-field full">
+                  <label>仓库地址</label>
+                  <input value="https://github.com/spring-projects/spring-petclinic" />
+                </div>
+                <div class="form-field">
+                  <label>默认分支</label>
+                  <select>
+                    <option>main</option>
+                    <option>master</option>
+                    <option>develop</option>
+                    <option>release/*</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>受保护分支</label>
+                  <input value="main, release/*, hotfix/*" />
+                </div>
+                <div class="form-field">
+                  <label>扫描源分支规则</label>
+                  <input value="feature/*, fix/*, hotfix/*" />
+                </div>
+                <div class="form-field">
+                  <label>目标分支规则</label>
+                  <input value="main, develop, release/*" />
+                </div>
+                <div class="form-field full">
+                  <label>Webhook URL</label>
+                  <input value="https://codepilotops.example.com/api/webhooks/git" />
+                  <span class="hint">GitHub / GitLab 配置该地址后，Push、PR、MR 事件会自动触发分析任务。</span>
+                </div>
+                <div class="form-field">
+                  <label>Webhook Secret</label>
+                  <input type="password" value="codepilotops-secret" />
+                </div>
+                <div class="form-field">
+                  <label>默认评判标准模板</label>
+                  <select>
+                    <option>Java 后端代码质量基线</option>
+                    <option>支付核心变更评审标准</option>
+                    <option>Kubernetes 生产发布基线</option>
+                    <option>依赖升级风险评估</option>
+                  </select>
+                </div>
+                <div class="form-field full">
+                  <div class="button-row">
+                    <button class="btn">拉取仓库分支</button>
+                    <button class="btn">生成 Webhook 配置说明</button>
+                    <button class="btn primary">保存仓库配置</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">自动扫描策略</h2>
+                  <div class="panel-subtitle">定义哪些事件触发 AI 分析，以及高风险时如何处理。</div>
+                </div>
+              </div>
+              <div class="panel-body review-section">
+                <div class="checkbox-list">
+                  <label class="checkbox-row"><input type="checkbox" checked /> PR / MR 创建时自动扫描</label>
+                  <label class="checkbox-row"><input type="checkbox" checked /> PR / MR 更新时自动重新扫描</label>
+                  <label class="checkbox-row"><input type="checkbox" /> Push 到 feature/* 分支时扫描</label>
+                  <label class="checkbox-row"><input type="checkbox" checked /> 合并到受保护分支前执行门禁分析</label>
+                  <label class="checkbox-row"><input type="checkbox" checked /> 分析完成后回写 PR / MR 评论</label>
+                  <label class="checkbox-row"><input type="checkbox" /> 高风险时自动创建 Issue</label>
+                </div>
+
+                <div class="result-card">
+                  <strong>门禁规则</strong>
+                  <div class="criteria-list">
+                    <div class="criteria-item">
+                      <div><strong>风险分 >= 85</strong><div class="policy-meta">建议阻断合并，并要求负责人确认。</div></div>
+                      <span class="tag danger">阻断</span>
+                    </div>
+                    <div class="criteria-item">
+                      <div><strong>命中高危安全规则</strong><div class="policy-meta">敏感信息、权限绕过、依赖高危 CVE。</div></div>
+                      <span class="tag danger">阻断</span>
+                    </div>
+                    <div class="criteria-item">
+                      <div><strong>缺少测试但风险分 < 85</strong><div class="policy-meta">评论提示并要求 Reviewer 关注。</div></div>
+                      <span class="tag warning">提醒</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="result-card">
+                  <strong>最近 Webhook 事件</strong>
+                  <table>
+                    <thead>
+                      <tr><th>事件</th><th>分支</th><th>结果</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>pull_request.opened</td><td class="mono">feature/user-api -> main</td><td><span class="tag success">已触发</span></td></tr>
+                      <tr><td>push</td><td class="mono">feature/payment-refactor</td><td><span class="tag neutral">忽略</span></td></tr>
+                      <tr><td>merge_request.updated</td><td class="mono">fix/login -> develop</td><td><span class="tag success">已触发</span></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top: 16px;">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">已接入仓库</h2>
+                <div class="panel-subtitle">每个仓库可以绑定不同分支规则、AI Provider 和评判标准模板。</div>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>平台</th>
+                  <th>仓库</th>
+                  <th>默认分支</th>
+                  <th>自动扫描</th>
+                  <th>模板</th>
+                  <th>最后事件</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="tag blue">GitHub</span></td>
+                  <td class="mono">spring-projects/spring-petclinic</td>
+                  <td>main</td>
+                  <td>PR 创建 / 更新 / 合并前</td>
+                  <td>Java 后端代码质量基线</td>
+                  <td>8 分钟前</td>
+                  <td><span class="tag success">正常</span></td>
+                </tr>
+                <tr>
+                  <td><span class="tag purple">GitLab</span></td>
+                  <td class="mono">platform/order-service</td>
+                  <td>develop</td>
+                  <td>MR 创建 / 更新</td>
+                  <td>支付核心变更评审标准</td>
+                  <td>2 小时前</td>
+                  <td><span class="tag success">正常</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="new-analysis" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>新建分析</h1>
+              <p class="page-desc">输入 GitHub PR 信息，启动规则扫描、AI 风险评估、知识库增强和治理策略校验。</p>
+            </div>
+          </div>
+
+          <div class="analysis-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">PR 分析任务</h2>
+                  <div class="panel-subtitle">适合个人本地演示，也能扩展为企业 GitHub App 接入模式。</div>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label for="manual-platform">代码平台</label>
+                    <select id="manual-platform">
+                      <option>GitHub</option>
+                      <option>GitLab</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label for="manual-mode">扫描模式</label>
+                    <select id="manual-mode">
+                      <option>PR / MR Diff 分析</option>
+                      <option>分支对比分支分析</option>
+                      <option>最近一次 Push 分析</option>
+                      <option>指定 Commit 分析</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label for="owner">仓库 Owner</label>
+                    <input id="owner" value="spring-projects" />
+                  </div>
+                  <div class="form-field">
+                    <label for="repo">仓库名称</label>
+                    <input id="repo" value="spring-petclinic" />
+                  </div>
+                  <div class="form-field">
+                    <label for="pr">Pull Request 编号</label>
+                    <input id="pr" type="number" value="123" />
+                  </div>
+                  <div class="form-field">
+                    <label for="mr">Merge Request 编号</label>
+                    <input id="mr" value="" placeholder="GitLab 仓库可填写" />
+                  </div>
+                  <div class="form-field">
+                    <label for="source-branch">源分支</label>
+                    <input id="source-branch" value="feature/user-api" />
+                  </div>
+                  <div class="form-field">
+                    <label for="target-branch">目标分支</label>
+                    <select id="target-branch">
+                      <option>main</option>
+                      <option>master</option>
+                      <option>develop</option>
+                      <option>release/1.0</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label for="token">GitHub Token</label>
+                    <input id="token" type="password" value="ghp_mock_token" />
+                    <span class="hint">GitHub 使用 PAT 或 App Token，GitLab 使用 Project Access Token。</span>
+                  </div>
+                  <div class="form-field">
+                    <label for="provider">AI Provider</label>
+                    <select id="provider">
+                      <option>Mock Reviewer</option>
+                      <option>Ollama 本地模型</option>
+                      <option>OpenAI-Compatible API</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label for="model">模型名称</label>
+                    <input id="model" value="mock-reviewer" />
+                  </div>
+                <div class="form-field full">
+                  <label>分析能力</label>
+                  <div class="checkbox-list">
+                    <label class="checkbox-row"><input type="checkbox" checked /> 启用规则引擎扫描</label>
+                    <label class="checkbox-row"><input type="checkbox" checked /> 生成 AI 结构化 Review</label>
+                    <label class="checkbox-row"><input type="checkbox" checked /> 引用团队知识库上下文</label>
+                    <label class="checkbox-row"><input type="checkbox" checked /> 执行企业合规策略</label>
+                    <label class="checkbox-row"><input type="checkbox" /> 分析完成后自动评论到 GitHub PR</label>
+                  </div>
+                </div>
+                  <div class="form-field full">
+                    <label>触发来源说明</label>
+                    <div class="result-card">
+                      <div class="criteria-list">
+                        <div class="criteria-item">
+                          <div><strong>手动扫描</strong><div class="policy-meta">用户填写平台、仓库、源分支、目标分支和 PR/MR 编号后主动触发。</div></div>
+                          <span class="tag blue">当前页面</span>
+                        </div>
+                        <div class="criteria-item">
+                          <div><strong>自动扫描</strong><div class="policy-meta">仓库接入 Webhook 后，由 Push、PR/MR 创建、更新或合并前事件自动触发。</div></div>
+                          <span class="tag success">仓库接入</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-field full">
+                    <label for="context">补充上下文</label>
+                    <textarea id="context">本次变更涉及用户接口与 Kubernetes 部署配置，请重点关注测试覆盖、回滚风险和生产健康检查。</textarea>
+                    <span class="hint">这些上下文会进入 AI Review Prompt，但不会替代规则引擎结果。</span>
+                  </div>
+                  <div class="form-field full">
+                    <div class="button-row">
+                      <button class="btn">校验 GitHub 权限</button>
+                      <button class="btn">预估模型成本</button>
+                      <button class="btn primary" data-jump="detail">启动分析任务</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">AI 分析链路</h2>
+                  <div class="panel-subtitle">企业级 AI 应用需要可解释、可审计、可降级。</div>
+                </div>
+              </div>
+              <div class="panel-body timeline">
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div><div class="timeline-title">拉取 PR Diff</div><div class="timeline-meta">变更文件、Patch、提交元数据</div></div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div><div class="timeline-title">规则引擎扫描</div><div class="timeline-meta">Java、SQL、Docker、K8s、GitHub Actions</div></div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div><div class="timeline-title">检索知识库上下文</div><div class="timeline-meta">团队规范、上线标准、回滚模板</div></div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div><div class="timeline-title">调用 AI Reviewer</div><div class="timeline-meta">结构化 JSON 输出，失败时自动降级 Mock Provider</div></div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot"></div>
+                  <div><div class="timeline-title">执行治理策略</div><div class="timeline-meta">高危规则可阻断评论或合并建议</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="code-analysis" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>代码片段分析</h1>
+              <p class="page-desc">无需接入 GitHub，直接粘贴代码、依赖、配置或日志片段，让 AI 按指定标准进行风险分析。</p>
+            </div>
+            <div class="button-row">
+              <button class="btn">清空内容</button>
+              <button class="btn">导入文件</button>
+              <button class="btn primary">开始 AI 分析</button>
+            </div>
+          </div>
+
+          <div class="code-workbench">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">粘贴待分析内容</h2>
+                  <div class="panel-subtitle">支持 Java、SQL、YAML、Dockerfile、pom.xml、Gradle、日志片段和异常堆栈。</div>
+                </div>
+                <span class="tag blue">临时分析</span>
+              </div>
+              <div class="panel-body">
+                <div class="form-grid" style="margin-bottom: 14px;">
+                  <div class="form-field">
+                    <label>内容类型</label>
+                    <select>
+                      <option>自动识别</option>
+                      <option>Java 代码</option>
+                      <option>Maven 依赖</option>
+                      <option>Kubernetes YAML</option>
+                      <option>Dockerfile</option>
+                      <option>SQL 脚本</option>
+                      <option>异常日志</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>评判标准模板</label>
+                    <select>
+                      <option>Java 后端代码质量基线</option>
+                      <option>Spring Boot 安全检查</option>
+                      <option>依赖升级风险评估</option>
+                      <option>Kubernetes 生产发布基线</option>
+                      <option>自定义模板：支付核心变更</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>分析目标</label>
+                    <select>
+                      <option>综合风险分析</option>
+                      <option>安全漏洞与敏感信息</option>
+                      <option>性能与并发风险</option>
+                      <option>可维护性与代码规范</option>
+                      <option>上线与回滚风险</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>AI Provider</label>
+                    <select>
+                      <option>Mock Reviewer</option>
+                      <option>Ollama 本地模型</option>
+                      <option>OpenAI-Compatible API</option>
+                    </select>
+                  </div>
+                </div>
+                <textarea class="code-editor">public UserDTO updateUser(Long id, UpdateUserRequest request) {
+    User user = userRepository.findById(id).orElseThrow();
+    user.setEmail(request.getEmail());
+    user.setRole(request.getRole());
+    userRepository.save(user);
+    return mapper.toDTO(user);
+}</textarea>
+                <div class="button-row" style="margin-top: 14px;">
+                  <button class="btn">保存为分析样例</button>
+                  <button class="btn">生成单元测试建议</button>
+                  <button class="btn primary">按模板分析</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">AI 分析结果预览</h2>
+                  <div class="panel-subtitle">展示风险评分、标准命中、修复建议和可执行动作。</div>
+                </div>
+                <span class="tag medium">中风险</span>
+              </div>
+              <div class="panel-body review-section">
+                <div class="result-card">
+                  <div class="score-row">
+                    <span>安全风险</span>
+                    <div class="score-track"><div class="score-fill danger" style="width: 72%;"></div></div>
+                    <strong>72</strong>
+                  </div>
+                  <div class="score-row">
+                    <span>测试缺口</span>
+                    <div class="score-track"><div class="score-fill warning" style="width: 64%;"></div></div>
+                    <strong>64</strong>
+                  </div>
+                  <div class="score-row">
+                    <span>可维护性</span>
+                    <div class="score-track"><div class="score-fill" style="width: 38%;"></div></div>
+                    <strong>38</strong>
+                  </div>
+                </div>
+
+                <div class="review-block">
+                  <h3>关键发现</h3>
+                  <ul>
+                    <li>方法允许直接修改用户角色，需要确认调用方是否具备权限校验。</li>
+                    <li>邮箱字段缺少格式校验和唯一性冲突处理。</li>
+                    <li>未记录关键字段变更审计日志，不利于企业权限变更追踪。</li>
+                  </ul>
+                </div>
+
+                <div class="review-block">
+                  <h3>建议动作</h3>
+                  <ul>
+                    <li>增加角色变更权限校验，例如仅管理员可修改 role。</li>
+                    <li>补充 UserService 单元测试和 Controller 集成测试。</li>
+                    <li>对角色变更写入审计事件，便于安全追溯。</li>
+                  </ul>
+                </div>
+
+                <div class="result-card">
+                  <strong>可生成内容</strong>
+                  <div class="button-row">
+                    <button class="btn">生成修复 Patch</button>
+                    <button class="btn">生成测试用例</button>
+                    <button class="btn">复制 Markdown 报告</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="detail" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>spring-projects/spring-petclinic #123</h1>
+              <p class="page-desc">已完成 · 12 个变更文件 · 5 条风险发现 · 使用 Mock Reviewer · 成本 $0.00</p>
+            </div>
+            <div class="button-row">
+              <button class="btn">打开 GitHub PR</button>
+              <button class="btn">重新分析</button>
+              <button class="btn primary">发布 AI Review 评论</button>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-bottom: 16px;">
+            <div class="risk-card">
+              <div class="gauge">
+                <div class="gauge-inner">
+                  <div class="gauge-score">68</div>
+                  <div class="gauge-label">中风险</div>
+                </div>
+              </div>
+              <div>
+                <h2 class="panel-title">AI 风险摘要</h2>
+                <p class="page-desc">本次 PR 修改了用户接口逻辑和 Kubernetes 部署配置。AI 建议重点关注接口测试覆盖、健康检查缺失、Docker 镜像版本漂移以及上线后的回滚路径。</p>
+                <div class="summary-list">
+                  <div class="summary-item"><strong>12</strong><span>变更文件</span></div>
+                  <div class="summary-item"><strong>5</strong><span>风险发现</span></div>
+                  <div class="summary-item"><strong>1</strong><span>高危问题</span></div>
+                  <div class="summary-item"><strong>4</strong><span>建议测试</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="tabs">
+              <button class="tab active" data-tab="findings">风险发现</button>
+              <button class="tab" data-tab="files">变更文件</button>
+              <button class="tab" data-tab="review">AI Review</button>
+              <button class="tab" data-tab="governance">治理结果</button>
+              <button class="tab" data-tab="raw">原始数据</button>
+            </div>
+
+            <div id="tab-findings" class="tab-content active">
+              <table>
+                <thead>
+                  <tr>
+                    <th>等级</th>
+                    <th>规则</th>
+                    <th>文件</th>
+                    <th>问题描述</th>
+                    <th>修复建议</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="tag high">高危</span></td>
+                    <td class="mono">K8S_MISSING_PROBES</td>
+                    <td class="mono">k8s/deployment.yaml</td>
+                    <td>Deployment 未配置 livenessProbe 或 readinessProbe。</td>
+                    <td>补充健康检查，降低发布后不可用风险。</td>
+                  </tr>
+                  <tr>
+                    <td><span class="tag medium">中危</span></td>
+                    <td class="mono">JAVA_CONTROLLER_WITHOUT_TEST</td>
+                    <td class="mono">src/main/java/.../UserController.java</td>
+                    <td>Controller 发生变更，但未发现关联测试文件变更。</td>
+                    <td>补充接口集成测试，覆盖新增或变更的 API 行为。</td>
+                  </tr>
+                  <tr>
+                    <td><span class="tag medium">中危</span></td>
+                    <td class="mono">DOCKER_LATEST_TAG</td>
+                    <td class="mono">Dockerfile</td>
+                    <td>基础镜像使用 latest 标签，存在不可重复构建风险。</td>
+                    <td>固定基础镜像版本，确保构建结果可追溯。</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div id="tab-files" class="tab-content">
+              <table>
+                <thead>
+                  <tr>
+                    <th>路径</th>
+                    <th>类型</th>
+                    <th>新增</th>
+                    <th>删除</th>
+                    <th>风险数</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">src/main/java/com/example/UserController.java</td>
+                    <td><span class="tag blue">JAVA</span></td>
+                    <td>45</td>
+                    <td>8</td>
+                    <td>1</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">k8s/deployment.yaml</td>
+                    <td><span class="tag cyan">K8S</span></td>
+                    <td>18</td>
+                    <td>2</td>
+                    <td>1</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">Dockerfile</td>
+                    <td><span class="tag purple">DOCKER</span></td>
+                    <td>4</td>
+                    <td>1</td>
+                    <td>1</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div id="tab-review" class="tab-content">
+              <div class="panel-body review-section">
+                <div class="review-block">
+                  <h3>摘要</h3>
+                  <p>该 PR 涉及用户接口逻辑和部署配置变更，整体为中风险。建议 Reviewer 优先检查接口行为、测试覆盖、容器镜像版本和 Kubernetes 健康检查。</p>
+                </div>
+                <div class="review-block">
+                  <h3>关键风险</h3>
+                  <ul>
+                    <li>Controller 变更缺少对应测试，可能导致接口行为回归。</li>
+                    <li>Kubernetes Deployment 缺少健康检查，发布后故障发现和流量摘除能力不足。</li>
+                    <li>Dockerfile 使用 latest 标签，构建结果不稳定。</li>
+                  </ul>
+                </div>
+                <div class="review-block">
+                  <h3>建议补充测试</h3>
+                  <ul>
+                    <li>为 UserController 新增接口集成测试。</li>
+                    <li>验证容器启动、探针成功和探针失败场景。</li>
+                    <li>执行用户 API 主流程回归测试。</li>
+                  </ul>
+                </div>
+                <div class="review-block">
+                  <h3>回滚建议</h3>
+                  <p>如果上线后健康检查失败或用户接口异常，优先回滚应用镜像和 deployment.yaml，确认数据库未产生不可逆变更后再恢复流量。</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="tab-governance" class="tab-content">
+              <div class="panel-body">
+                <div class="three">
+                  <div class="policy-card">
+                    <strong>合并门禁策略</strong>
+                    <span class="tag warning">需要人工确认</span>
+                    <div class="policy-meta">命中高危 K8s 规则，但未达到自动阻断阈值。</div>
+                  </div>
+                  <div class="policy-card">
+                    <strong>敏感信息策略</strong>
+                    <span class="tag success">通过</span>
+                    <div class="policy-meta">未检测到疑似密钥、Token 或密码。</div>
+                  </div>
+                  <div class="policy-card">
+                    <strong>AI 输出合规</strong>
+                    <span class="tag success">通过</span>
+                    <div class="policy-meta">结构化输出解析成功，未发现越权建议。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="tab-raw" class="tab-content">
+              <div class="panel-body">
+                <pre class="json">{
+  "riskLevel": "MEDIUM",
+  "riskScore": 68,
+  "aiProvider": "mock-reviewer",
+  "policyDecision": "REQUIRE_HUMAN_CONFIRMATION",
+  "findings": [
+    {
+      "ruleId": "K8S_MISSING_PROBES",
+      "severity": "HIGH",
+      "filePath": "k8s/deployment.yaml"
+    }
+  ]
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="history" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>分析历史</h1>
+              <p class="page-desc">查询历史 PR 分析任务，追踪风险趋势、AI 审核效果和评论发布记录。</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-body">
+              <div class="filter-row">
+                <input placeholder="搜索仓库或 PR 编号" />
+                <select><option>风险等级：全部</option><option>高风险</option><option>中风险</option><option>低风险</option></select>
+                <select><option>任务状态：全部</option><option>已完成</option><option>分析中</option><option>失败</option></select>
+                <select><option>Provider：全部</option><option>Mock</option><option>Ollama</option><option>OpenAI-Compatible</option></select>
+                <button class="btn">刷新</button>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>仓库</th>
+                    <th>PR</th>
+                    <th>风险</th>
+                    <th>分数</th>
+                    <th>发现</th>
+                    <th>AI Provider</th>
+                    <th>治理结论</th>
+                    <th>创建时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">spring-projects/spring-petclinic</td>
+                    <td>#123</td>
+                    <td><span class="tag medium">中风险</span></td>
+                    <td>68</td>
+                    <td>5</td>
+                    <td>Mock</td>
+                    <td>人工确认</td>
+                    <td>8 分钟前</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">acme/api-gateway</td>
+                    <td>#42</td>
+                    <td><span class="tag high">高风险</span></td>
+                    <td>86</td>
+                    <td>9</td>
+                    <td>Ollama</td>
+                    <td>建议阻断</td>
+                    <td>2 小时前</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">demo/order-service</td>
+                    <td>#18</td>
+                    <td><span class="tag low">低风险</span></td>
+                    <td>22</td>
+                    <td>1</td>
+                    <td>Mock</td>
+                    <td>通过</td>
+                    <td>今天</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="ai-center" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>AI 能力中心</h1>
+              <p class="page-desc">集中管理 CodePilotOps 的 AI Review 能力、知识库上下文、Prompt 模板和降级策略。</p>
+            </div>
+            <button class="btn primary">新增 AI 能力</button>
+          </div>
+
+          <div class="capability-grid">
+            <div class="capability">
+              <div class="capability-title">PR 风险摘要 <span class="tag success">已启用</span></div>
+              <p>根据 Diff、规则发现和知识库规范生成结构化风险摘要。</p>
+            </div>
+            <div class="capability">
+              <div class="capability-title">测试建议生成 <span class="tag success">已启用</span></div>
+              <p>识别测试缺口，为 Controller、Service、SQL 和部署变更生成测试建议。</p>
+            </div>
+            <div class="capability">
+              <div class="capability-title">发布风险说明 <span class="tag success">已启用</span></div>
+              <p>输出上线注意事项、回滚建议和 Reviewer 重点关注区域。</p>
+            </div>
+            <div class="capability">
+              <div class="capability-title">团队规范 RAG <span class="tag warning">演示模式</span></div>
+              <p>检索团队工程规范、部署标准、安全基线，为 AI Review 提供上下文。</p>
+            </div>
+            <div class="capability">
+              <div class="capability-title">敏感信息识别 <span class="tag success">已启用</span></div>
+              <p>结合规则和 AI 对配置文件、脚本和日志片段进行风险识别。</p>
+            </div>
+            <div class="capability">
+              <div class="capability-title">失败降级策略 <span class="tag success">已启用</span></div>
+              <p>模型调用失败时自动使用 Mock Provider，保证分析链路不中断。</p>
+            </div>
+          </div>
+
+          <div class="split" style="margin-top: 16px;">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Prompt 模板</h2>
+                  <div class="panel-subtitle">企业 AI 应用需要模板版本化、结构化输出和审计能力。</div>
+                </div>
+                <button class="btn">编辑模板</button>
+              </div>
+              <div class="panel-body">
+                <pre class="json">System:
+你是资深 Java 后端 Reviewer 和发布风险分析专家。
+请基于变更文件、规则发现和团队规范输出 JSON。
+不要编造输入中不存在的文件或事实。
+
+Output Schema:
+summary, riskLevel, riskScore, keyRisks,
+suggestedTests, releaseNotes, rollbackPlan</pre>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">知识库上下文</h2>
+                  <div class="panel-subtitle">用于增强 AI Review 的团队工程规范。</div>
+                </div>
+              </div>
+              <table>
+                <thead>
+                  <tr><th>文档</th><th>类型</th><th>状态</th><th>最近同步</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Java API Review Guideline</td><td>研发规范</td><td><span class="tag success">可用</span></td><td>今天</td></tr>
+                  <tr><td>Kubernetes Release Checklist</td><td>发布规范</td><td><span class="tag success">可用</span></td><td>昨天</td></tr>
+                  <tr><td>Incident Rollback Playbook</td><td>应急手册</td><td><span class="tag warning">待更新</span></td><td>12 天前</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="templates" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>评判标准模板</h1>
+              <p class="page-desc">将团队标准、业务规则、代码规范、依赖策略和发布基线沉淀为可复用分析模板。</p>
+            </div>
+            <div class="button-row">
+              <button class="btn">导入 YAML / JSON</button>
+              <button class="btn">从 Markdown 生成模板</button>
+              <button class="btn primary">创建模板</button>
+            </div>
+          </div>
+
+          <div class="split" style="margin-bottom: 16px;">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">模板创建器</h2>
+                  <div class="panel-subtitle">用户可按功能、代码、依赖、部署、安全、性能等维度自定义 AI 分析标准。</div>
+                </div>
+                <span class="tag purple">可版本化</span>
+              </div>
+              <div class="panel-body form-grid">
+                <div class="form-field">
+                  <label>模板名称</label>
+                  <input value="支付核心变更评审标准" />
+                </div>
+                <div class="form-field">
+                  <label>适用范围</label>
+                  <select>
+                    <option>代码片段 + PR 分析</option>
+                    <option>仅代码片段</option>
+                    <option>仅 PR / Diff</option>
+                    <option>仅依赖文件</option>
+                    <option>仅部署配置</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>模板分类</label>
+                  <select>
+                    <option>业务功能评审</option>
+                    <option>代码质量</option>
+                    <option>安全合规</option>
+                    <option>依赖治理</option>
+                    <option>发布风险</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>风险阈值</label>
+                  <select>
+                    <option>高风险 >= 80 自动阻断</option>
+                    <option>高风险 >= 70 人工确认</option>
+                    <option>仅提示不阻断</option>
+                  </select>
+                </div>
+                <div class="form-field full">
+                  <label>评判标准描述</label>
+                  <textarea>1. 不允许绕过权限校验修改支付状态、用户角色或资金相关字段。
+2. 涉及金额计算时必须检查精度、舍入规则和幂等处理。
+3. 依赖升级必须说明兼容性、许可证和已知 CVE 风险。
+4. 涉及发布配置时必须提供健康检查、回滚方式和灰度策略。</textarea>
+                </div>
+                <div class="form-field full">
+                  <div class="button-row">
+                    <button class="btn">AI 拆解为规则</button>
+                    <button class="btn">校验模板</button>
+                    <button class="btn primary">保存为 v1.0</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">标准拆解预览</h2>
+                  <div class="panel-subtitle">AI 将自然语言标准转成可执行检查点。</div>
+                </div>
+              </div>
+              <div class="panel-body criteria-list">
+                <div class="criteria-item">
+                  <div><strong>权限敏感字段变更</strong><div class="policy-meta">检测 role、status、amount 等字段是否存在权限或审计要求。</div></div>
+                  <span class="tag high">高危</span>
+                </div>
+                <div class="criteria-item">
+                  <div><strong>金额计算精度</strong><div class="policy-meta">检测 BigDecimal 使用、舍入规则和浮点误用风险。</div></div>
+                  <span class="tag high">高危</span>
+                </div>
+                <div class="criteria-item">
+                  <div><strong>依赖兼容性声明</strong><div class="policy-meta">pom.xml 或 build.gradle 变更需检查兼容性和 CVE 信息。</div></div>
+                  <span class="tag medium">中危</span>
+                </div>
+                <div class="criteria-item">
+                  <div><strong>上线回滚材料</strong><div class="policy-meta">发布配置变更必须包含回滚说明或变更影响说明。</div></div>
+                  <span class="tag medium">中危</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="template-grid">
+            <div class="template-card">
+              <div class="template-head">
+                <div>
+                  <div class="template-title">Java 后端代码质量基线</div>
+                  <p class="template-desc">检查异常处理、事务边界、空值处理、日志、测试覆盖和可维护性。</p>
+                </div>
+                <span class="tag success">启用</span>
+              </div>
+              <div class="policy-meta">适用于：Java / Spring Boot / PR Diff / Code Snippet</div>
+            </div>
+            <div class="template-card">
+              <div class="template-head">
+                <div>
+                  <div class="template-title">依赖升级风险评估</div>
+                  <p class="template-desc">检查版本漂移、CVE、许可证、破坏性升级和传递依赖变化。</p>
+                </div>
+                <span class="tag success">启用</span>
+              </div>
+              <div class="policy-meta">适用于：pom.xml / build.gradle / package metadata</div>
+            </div>
+            <div class="template-card">
+              <div class="template-head">
+                <div>
+                  <div class="template-title">Kubernetes 生产发布基线</div>
+                  <p class="template-desc">检查探针、资源限制、副本数、安全上下文、镜像标签和灰度策略。</p>
+                </div>
+                <span class="tag warning">需确认</span>
+              </div>
+              <div class="policy-meta">适用于：Deployment / Service / Ingress / Helm Values</div>
+            </div>
+            <div class="template-card">
+              <div class="template-head">
+                <div>
+                  <div class="template-title">业务功能验收标准</div>
+                  <p class="template-desc">用户可导入需求验收标准，让 AI 检查代码是否覆盖关键业务约束。</p>
+                </div>
+                <span class="tag blue">自定义</span>
+              </div>
+              <div class="policy-meta">适用于：需求文档 / PR 描述 / 代码片段 / 测试用例</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="rules" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>规则与策略</h1>
+              <p class="page-desc">规则引擎负责确定性风险发现，策略层负责企业治理、阻断建议和人工审批。</p>
+            </div>
+            <button class="btn primary">新增策略</button>
+          </div>
+
+          <div class="split">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">规则目录</h2>
+                  <div class="panel-subtitle">不依赖 AI 的确定性扫描规则。</div>
+                </div>
+              </div>
+              <table>
+                <thead>
+                  <tr><th>规则 ID</th><th>目标</th><th>等级</th><th>说明</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td class="mono">K8S_MISSING_PROBES</td><td>Kubernetes</td><td><span class="tag high">高危</span></td><td>Deployment 缺少健康检查。</td></tr>
+                  <tr><td class="mono">SPRING_SECRET_IN_CONFIG</td><td>Spring Config</td><td><span class="tag high">高危</span></td><td>配置文件中存在疑似敏感信息。</td></tr>
+                  <tr><td class="mono">DOCKER_LATEST_TAG</td><td>Docker</td><td><span class="tag medium">中危</span></td><td>基础镜像使用 latest 标签。</td></tr>
+                  <tr><td class="mono">JAVA_CONTROLLER_WITHOUT_TEST</td><td>Java</td><td><span class="tag medium">中危</span></td><td>Controller 变更未发现测试变更。</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">企业策略</h2>
+                  <div class="panel-subtitle">定义哪些风险需要阻断、审批或仅提示。</div>
+                </div>
+              </div>
+              <div class="panel-body review-section">
+                <div class="policy-card">
+                  <strong>生产配置敏感信息阻断</strong>
+                  <span class="tag danger">自动阻断</span>
+                  <div class="policy-meta">命中 SPRING_SECRET_IN_CONFIG 时禁止发布 PR 评论为“可合并”。</div>
+                </div>
+                <div class="policy-card">
+                  <strong>K8s 高危变更人工确认</strong>
+                  <span class="tag warning">人工审批</span>
+                  <div class="policy-meta">Deployment、Ingress、Service 变更命中高危规则时需要 Reviewer 确认。</div>
+                </div>
+                <div class="policy-card">
+                  <strong>AI 输出结构化校验</strong>
+                  <span class="tag success">自动校验</span>
+                  <div class="policy-meta">AI 输出必须符合 JSON Schema，否则自动降级并记录审计事件。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="devops-toolbox" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>AI DevOps 工具箱</h1>
+              <p class="page-desc">围绕代码到发布的完整链路，提供可落地的 AI 辅助研发效能能力。</p>
+            </div>
+            <div class="button-row">
+              <button class="btn">查看 Roadmap</button>
+              <button class="btn primary">启用推荐能力</button>
+            </div>
+          </div>
+
+          <div class="toolbox-grid">
+            <div class="toolbox-card">
+              <div class="capability-title">变更影响分析 <span class="tag success">MVP</span></div>
+              <p>根据 PR Diff 识别受影响的接口、配置、数据库表、部署资源和测试范围。</p>
+              <div class="policy-meta">输入：Diff / OpenAPI / SQL / K8s YAML</div>
+              <div class="policy-meta">输出：影响范围、风险链路、建议 Reviewer</div>
+            </div>
+            <div class="toolbox-card">
+              <div class="capability-title">测试用例生成 <span class="tag success">MVP</span></div>
+              <p>基于变更代码和评判标准生成单元测试、集成测试和回归测试建议。</p>
+              <div class="policy-meta">输入：Java 代码 / Diff / 模板标准</div>
+              <div class="policy-meta">输出：JUnit 样例、测试清单、覆盖缺口</div>
+            </div>
+            <div class="toolbox-card">
+              <div class="capability-title">依赖风险分析 <span class="tag blue">推荐</span></div>
+              <p>检查依赖升级、许可证、CVE、传递依赖变化和 Spring Boot 兼容性风险。</p>
+              <div class="policy-meta">输入：pom.xml / build.gradle / lock file</div>
+              <div class="policy-meta">输出：升级建议、兼容性提醒、替代版本</div>
+            </div>
+            <div class="toolbox-card">
+              <div class="capability-title">发布风险评分 <span class="tag success">MVP</span></div>
+              <p>结合代码风险、测试缺口、配置变更和历史事故，对 PR 给出发布风险分。</p>
+              <div class="policy-meta">输入：规则结果 / AI Review / 历史分析</div>
+              <div class="policy-meta">输出：风险分、阻断建议、上线注意事项</div>
+            </div>
+            <div class="toolbox-card">
+              <div class="capability-title">Incident 辅助排障 <span class="tag warning">后续</span></div>
+              <p>粘贴异常日志或告警，AI 结合最近变更、依赖和部署事件生成排障路径。</p>
+              <div class="policy-meta">输入：日志 / 告警 / 最近 PR / Trace 摘要</div>
+              <div class="policy-meta">输出：可能原因、验证命令、回滚建议</div>
+            </div>
+            <div class="toolbox-card">
+              <div class="capability-title">AI Agent 执行计划 <span class="tag warning">后续</span></div>
+              <p>让 AI 生成可人工确认的修复计划、测试计划和发布计划，但不自动执行危险操作。</p>
+              <div class="policy-meta">输入：风险报告 / 用户目标 / 仓库上下文</div>
+              <div class="policy-meta">输出：任务拆解、命令建议、审批点</div>
+            </div>
+            <div class="toolbox-card">
+              <div class="capability-title">变更摘要与 Release Note <span class="tag success">MVP</span></div>
+              <p>从 PR Diff 生成面向研发、测试、运维和业务的多视角变更摘要。</p>
+              <div class="policy-meta">输入：Diff / PR 描述 / Issue</div>
+              <div class="policy-meta">输出：Release Note、测试重点、上线公告</div>
+            </div>
+            <div class="toolbox-card">
+              <div class="capability-title">AI 成本与配额治理 <span class="tag blue">推荐</span></div>
+              <p>按团队、仓库、Provider 统计 Token、费用、失败率和缓存命中率。</p>
+              <div class="policy-meta">输入：模型调用记录 / Provider 配置</div>
+              <div class="policy-meta">输出：预算告警、Provider 路由建议</div>
+            </div>
+            <div class="toolbox-card">
+              <div class="capability-title">可观测性增强 <span class="tag blue">推荐</span></div>
+              <p>为 AI 调用、分析任务、GitHub API 和规则执行链路提供 Trace、Metric、Log 视图。</p>
+              <div class="policy-meta">输入：OpenTelemetry Trace / Job Metrics</div>
+              <div class="policy-meta">输出：耗时瓶颈、失败定位、SLO 看板</div>
+            </div>
+          </div>
+
+          <div class="split" style="margin-top: 16px;">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">推荐 MVP 组合</h2>
+                  <div class="panel-subtitle">一个月内优先实现这些能力，既实用也容易写进简历。</div>
+                </div>
+              </div>
+              <div class="panel-body criteria-list">
+                <div class="criteria-item"><div><strong>PR Diff 风险分析</strong><div class="policy-meta">GitHub API + 规则引擎 + AI Review 主链路。</div></div><span class="tag success">第一优先级</span></div>
+                <div class="criteria-item"><div><strong>代码片段分析</strong><div class="policy-meta">无须 GitHub 接入，适合演示和日常使用。</div></div><span class="tag success">第一优先级</span></div>
+                <div class="criteria-item"><div><strong>评判标准模板</strong><div class="policy-meta">体现企业级可配置、可治理和行业适配能力。</div></div><span class="tag success">第一优先级</span></div>
+                <div class="criteria-item"><div><strong>模型调用监控</strong><div class="policy-meta">展示 AI 应用工程化能力，而不是简单调用 API。</div></div><span class="tag blue">第二优先级</span></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Agent 安全边界</h2>
+                  <div class="panel-subtitle">符合企业 AI DevOps 的可控原则：建议可自动生成，危险操作需人工确认。</div>
+                </div>
+              </div>
+              <div class="panel-body">
+                <table>
+                  <thead>
+                    <tr><th>动作类型</th><th>默认策略</th><th>说明</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>生成 Review 报告</td><td><span class="tag success">自动</span></td><td>只产生文本和结构化结果。</td></tr>
+                    <tr><td>生成测试代码</td><td><span class="tag warning">人工采纳</span></td><td>AI 提供 Patch，开发者确认后合入。</td></tr>
+                    <tr><td>发布 GitHub 评论</td><td><span class="tag warning">可配置确认</span></td><td>默认需要用户点击发布。</td></tr>
+                    <tr><td>修改仓库文件</td><td><span class="tag danger">禁止自动执行</span></td><td>必须通过 PR 或人工确认。</td></tr>
+                    <tr><td>执行部署或回滚</td><td><span class="tag danger">禁止自动执行</span></td><td>仅生成建议和命令清单。</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="models" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>模型监控</h1>
+              <p class="page-desc">监控不同 AI Provider 的调用量、延迟、成本、失败率和结构化输出质量。</p>
+            </div>
+            <button class="btn">导出报表</button>
+          </div>
+
+          <div class="grid metrics">
+            <div class="panel metric"><div class="metric-label">今日调用量</div><div class="metric-value">348</div><div class="metric-note">PR Review 任务为主</div></div>
+            <div class="panel metric"><div class="metric-label">平均延迟</div><div class="metric-value">2.4s</div><div class="metric-note">P95 6.8s</div></div>
+            <div class="panel metric"><div class="metric-label">失败率</div><div class="metric-value">1.3%</div><div class="metric-note">已触发自动降级</div></div>
+            <div class="panel metric"><div class="metric-label">今日成本</div><div class="metric-value">$3.7</div><div class="metric-note">预算健康</div></div>
+          </div>
+
+          <div class="three">
+            <div class="model-card">
+              <div class="model-top"><div class="model-name">Mock Reviewer</div><span class="tag success">默认</span></div>
+              <div class="kv-grid">
+                <div class="kv"><span>调用量</span><strong>184</strong></div>
+                <div class="kv"><span>失败率</span><strong>0%</strong></div>
+                <div class="kv"><span>成本</span><strong>$0</strong></div>
+              </div>
+            </div>
+            <div class="model-card">
+              <div class="model-top"><div class="model-name">Ollama / llama3.1</div><span class="tag warning">本地</span></div>
+              <div class="kv-grid">
+                <div class="kv"><span>调用量</span><strong>96</strong></div>
+                <div class="kv"><span>失败率</span><strong>2.1%</strong></div>
+                <div class="kv"><span>成本</span><strong>$0</strong></div>
+              </div>
+            </div>
+            <div class="model-card">
+              <div class="model-top"><div class="model-name">OpenAI-Compatible</div><span class="tag blue">云端</span></div>
+              <div class="kv-grid">
+                <div class="kv"><span>调用量</span><strong>68</strong></div>
+                <div class="kv"><span>失败率</span><strong>1.5%</strong></div>
+                <div class="kv"><span>成本</span><strong>$3.7</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="audit" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>审计日志</h1>
+              <p class="page-desc">记录 AI 调用、策略决策、GitHub 评论、配置变更和人工审批动作。</p>
+            </div>
+          </div>
+          <div class="panel">
+            <table>
+              <thead>
+                <tr><th>时间</th><th>事件</th><th>对象</th><th>操作者</th><th>结果</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>23:18:42</td><td>AI_REVIEW_GENERATED</td><td class="mono">spring-petclinic#123</td><td>system</td><td><span class="tag success">成功</span></td></tr>
+                <tr><td>23:18:40</td><td>POLICY_EVALUATED</td><td class="mono">K8S_MISSING_PROBES</td><td>policy-engine</td><td><span class="tag warning">人工确认</span></td></tr>
+                <tr><td>23:18:35</td><td>KNOWLEDGE_CONTEXT_RETRIEVED</td><td>Release Checklist</td><td>rag-service</td><td><span class="tag success">成功</span></td></tr>
+                <tr><td>23:18:31</td><td>GITHUB_DIFF_FETCHED</td><td class="mono">spring-petclinic#123</td><td>github-client</td><td><span class="tag success">成功</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="settings" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>系统配置</h1>
+              <p class="page-desc">配置 GitHub 接入、AI Provider、知识库、评论模板和安全策略。</p>
+            </div>
+            <button class="btn primary">保存配置</button>
+          </div>
+
+          <div class="split">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">GitHub 接入</h2>
+                  <div class="panel-subtitle">用于拉取 PR Diff，并在授权后发布 Review 评论。</div>
+                </div>
+              </div>
+              <div class="panel-body form-grid">
+                <div class="form-field full"><label>Personal Access Token</label><input type="password" value="ghp_mock_token" /></div>
+                <div class="form-field"><label>默认 Owner</label><input value="spring-projects" /></div>
+                <div class="form-field"><label>默认仓库</label><input value="spring-petclinic" /></div>
+                <div class="form-field full"><label class="checkbox-row"><input type="checkbox" /> 默认允许自动发布 GitHub 评论</label></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">AI Provider</h2>
+                  <div class="panel-subtitle">支持 Mock、Ollama 和 OpenAI-Compatible API。</div>
+                </div>
+              </div>
+              <div class="panel-body form-grid">
+                <div class="form-field full"><label>Provider</label><select><option>Mock Reviewer</option><option>Ollama</option><option>OpenAI-Compatible</option></select></div>
+                <div class="form-field full"><label>Base URL</label><input value="http://localhost:11434" /></div>
+                <div class="form-field"><label>模型</label><input value="llama3.1" /></div>
+                <div class="form-field"><label>API Key</label><input type="password" placeholder="可选" /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const navButtons = document.querySelectorAll("[data-view]");
+    const views = document.querySelectorAll(".view");
+    const jumpButtons = document.querySelectorAll("[data-jump]");
+
+    function showView(id) {
+      views.forEach((view) => view.classList.toggle("active", view.id === id));
+      navButtons.forEach((button) => button.classList.toggle("active", button.dataset.view === id));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    navButtons.forEach((button) => {
+      button.addEventListener("click", () => showView(button.dataset.view));
+    });
+
+    jumpButtons.forEach((button) => {
+      button.addEventListener("click", () => showView(button.dataset.jump));
+    });
+
+    const tabButtons = document.querySelectorAll("[data-tab]");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const id = button.dataset.tab;
+        tabButtons.forEach((item) => item.classList.toggle("active", item === button));
+        tabContents.forEach((content) => content.classList.toggle("active", content.id === `tab-${id}`));
+      });
+    });
+  </script>
+</body>
+</html>
